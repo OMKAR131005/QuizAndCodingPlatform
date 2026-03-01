@@ -27,12 +27,13 @@ public class Question {
     private String correctAnswer;
 
     @Enumerated(EnumType.STRING)
+    @Column(length = 20)
     private Category category;
+
 
     @Column(nullable = true)
     private Difficulty difficulty;
     private UUID createdBy;
-
     private LocalDateTime createdAt;
     private boolean isPublic;
 

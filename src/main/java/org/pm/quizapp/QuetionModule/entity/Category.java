@@ -77,6 +77,8 @@ public enum Category {
     // General Knowledge
     GENERAL_KNOWLEDGE,
     CURRENT_AFFAIRS,
+    HISTORY,
+    GEOGRAPHY,
 
     // Misc
     OTHER

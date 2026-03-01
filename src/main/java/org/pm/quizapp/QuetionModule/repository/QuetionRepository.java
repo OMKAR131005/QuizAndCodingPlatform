@@ -25,4 +25,10 @@ public interface QuetionRepository extends JpaRepository<Question, UUID> {
             UUID userId,
             Pageable pageable
     );
+
+    Page<Question> findByCategoryAndIsPublicTrueOrCategoryAndCreatedBy(Category category, Category category1, UUID userId, Pageable pageable);
+
+    Page<Question> findByIsPublicTrueOrCreatedBy(UUID userId, Pageable pageable);
+
+    Page<Question> findByDifficultyAndIsPublicTrueOrDifficultyAndCreatedBy(Difficulty difficulty, Difficulty difficulty1, UUID userId, Pageable pageable);
 }

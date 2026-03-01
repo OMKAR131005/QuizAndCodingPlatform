@@ -4,9 +4,10 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 import org.pm.quizapp.QuetionModule.entity.Category;
+import org.pm.quizapp.QuetionModule.entity.Difficulty;
 
 @Data
-public class QuestionPost {
+public class RequestQuestion {
     @NotBlank
     @NotNull
     private String question;
@@ -17,6 +18,5 @@ public class QuestionPost {
     private String correctAnswer;
     private Category category;
     private boolean isPublic;
-
-
+    private Difficulty difficulty;
 }

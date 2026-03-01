@@ -3,25 +3,19 @@ package org.pm.quizapp.QuetionModule.service;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.pm.quizapp.QuetionModule.dto.QuestionPost;
 import org.pm.quizapp.QuetionModule.dto.ResponseQuestion;
 import org.pm.quizapp.QuetionModule.entity.Category;
 import org.pm.quizapp.QuetionModule.entity.Difficulty;
 import org.pm.quizapp.QuetionModule.entity.Question;
 import org.pm.quizapp.QuetionModule.excepetion.customException.NotAPublicQuestion;
+import org.pm.quizapp.QuetionModule.mapper.MapperAndUtil;
 import org.pm.quizapp.QuetionModule.repository.QuetionRepository;
 import org.pm.quizapp.authentication.service.JwtUtil;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-
-import javax.swing.text.html.Option;
-import java.time.LocalDateTime;
 import java.util.*;
 
 @RequiredArgsConstructor
@@ -43,46 +37,91 @@ public class QuestionService {
     public ResponseQuestion getQuestionById(@PathVariable UUID id, HttpServletRequest httpServletRequest){
         Optional<Question>question=questionRepository.findById(id);
         question.orElseThrow(()->new NoSuchElementException("question with id"+id+"does not found"));
-        String header = httpServletRequest.getHeader("Authorization");
-        String token = header.substring(7);
-        UUID userId = JwtUtil.extractUserId(token);
+        UUID userId= MapperAndUtil.userId(httpServletRequest);
         if(!question.get().isPublic()&&!question.get().getCreatedBy().equals(userId)) throw new NotAPublicQuestion("this question is not public question");
-        ResponseQuestion questionResponse=new ResponseQuestion();
-        questionResponse.setQuestion(question.get().getQuetion());
-        questionResponse.setOptionA(question.get().getOptionA());
-        questionResponse.setOptionB(question.get().getOptionB());
-        questionResponse.setOptionC(question.get().getOptionC());
-        questionResponse.setOptionD(question.get().getOptionD());
-        return questionResponse;
+        return MapperAndUtil.QuestionToResponse(question.get());
     }
 
-    public Page<Question> getQuestions(int page, int size) {
-
-        Pageable pageable = PageRequest.of(page, size);
-
-        return questionRepository.findByIsPublicTrue(pageable);
+    public Page<ResponseQuestion> getQuestions(Pageable pageable) {
+        return questionRepository
+                .findByIsPublicTrue(pageable)
+                .map(MapperAndUtil::QuestionToResponse);
     }
-    public Page <Question>getMyQuestion(Pageable pageable,UUID id){
-        //Pageable pageable =PageRequest.of(page,size);
-        return  questionRepository.findByCreatedBy(id,pageable);
+    public Page <ResponseQuestion>getMyQuestion(Pageable pageable,UUID id){
+        return  questionRepository.findByCreatedBy(id,pageable).map(MapperAndUtil::QuestionToResponse);
     }
-    public Page<Question>getByDifficulty(Difficulty difficulty, Pageable pageable){
-        return questionRepository.findByDifficulty(difficulty,pageable);
+    public Page<ResponseQuestion>getByDifficulty(Difficulty difficulty, Pageable pageable){
+        return questionRepository.findByDifficulty(difficulty,pageable).map(MapperAndUtil::QuestionToResponse);
     }
-    public Page<Question> getByCategory(Category category,Pageable pageable){
-        return questionRepository.findByCategory(category,pageable);
+    public Page<ResponseQuestion> getByCategory(Category category,Pageable pageable){
+        return questionRepository.findByCategory(category,pageable).map(MapperAndUtil::QuestionToResponse);
     }
-    public Page<Question> getMyQuestionByDifficulty(Difficulty difficulty,UUID id,Pageable pageable){
-        return  questionRepository.findByCreatedByAndDifficulty(id,difficulty,pageable);
+    public Page<ResponseQuestion> getMyQuestionByDifficulty(Difficulty difficulty,UUID id,Pageable pageable){
+        return  questionRepository.findByCreatedByAndDifficulty(id,difficulty,pageable).map(MapperAndUtil::QuestionToResponse);
     }
-    public Page<Question> getMyQuestionByCategory(Category category,UUID id,Pageable pageable){
-        return  questionRepository.findByCreatedByAndCategory(id,category,pageable);
+    public Page<ResponseQuestion> getMyQuestionByCategory(Category category,UUID id,Pageable pageable){
+        return  questionRepository.findByCreatedByAndCategory(id,category,pageable).map(MapperAndUtil::QuestionToResponse);
     }
 
-    public Page<Question> search(String keyword1,UUID id,Pageable pageable){
-        return questionRepository.findByQuetionContainingIgnoreCaseAndIsPublicTrueOrQuetionContainingIgnoreCaseAndCreatedBy(keyword1,keyword1,id,pageable);
+    public Page<ResponseQuestion> search(String keyword1,UUID id,Pageable pageable){
+        return questionRepository.findByQuetionContainingIgnoreCaseAndIsPublicTrueOrQuetionContainingIgnoreCaseAndCreatedBy(keyword1,keyword1,id,pageable).map(MapperAndUtil::QuestionToResponse);
     }
+    public Page<ResponseQuestion> search(
+            String keyword,
+            Difficulty difficulty,
+            Category category,
+            UUID userId,
+            Pageable pageable){
+        if(keyword != null && difficulty == null && category == null){
+            return questionRepository
+                    .findByQuetionContainingIgnoreCaseAndIsPublicTrueOrQuetionContainingIgnoreCaseAndCreatedBy(
+                            keyword,
+                            keyword,
+                            userId,
+                            pageable).map(MapperAndUtil::QuestionToResponse);
+        }
 
 
+        if(keyword == null && difficulty != null){
+            return questionRepository
+                    .findByDifficultyAndIsPublicTrueOrDifficultyAndCreatedBy(
+                            difficulty,
+                            difficulty,
+                            userId,
+                            pageable).map(MapperAndUtil::QuestionToResponse);
+        }
+
+
+        if(keyword == null && category != null){
+            return questionRepository
+                    .findByCategoryAndIsPublicTrueOrCategoryAndCreatedBy(
+                            category,
+                            category,
+                            userId,
+                            pageable).map(MapperAndUtil::QuestionToResponse);
+        }
+        if(keyword == null && difficulty == null && category == null){
+            return questionRepository
+                    .findByIsPublicTrueOrCreatedBy(
+                            userId,
+                            pageable).map(MapperAndUtil::QuestionToResponse);
+        }
+        return questionRepository
+                .findByIsPublicTrueOrCreatedBy(
+                        userId,
+                        pageable).map(MapperAndUtil::QuestionToResponse);
+    }
+    public String deleteQuestion(UUID id){
+       Optional<Question> question=questionRepository.findById(id);
+       question.orElseThrow(()->new NoSuchElementException("question with this id not found"));
+       questionRepository.deleteById(id);
+       return "Deleted successfully";
+    }
+    public Question getQuestionById(UUID id){
+
+        Optional<Question> question = questionRepository.findById(id);
+        question.orElseThrow(()->new NoSuchElementException("no question with this id is found"));
+        return question.get();
+    }
 
 }
