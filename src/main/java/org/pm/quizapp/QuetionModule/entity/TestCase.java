@@ -21,10 +21,11 @@ public class TestCase {
     private String input;
 
     @Lob
-    @Column(nullable = false)
+    @Column(name = "expected_output", nullable = false)
     private String expectedOutput;
 
-    private Boolean isHidden = false;
+    @Column(name = "is_hidden")
+    private boolean hidden;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "question_id")

@@ -1,18 +1,17 @@
 package org.pm.quizapp.QuetionModule.entity;
 
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.Data;
+
+
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 
 @Entity
 @Table(name = "coding_questions")
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
+@Data
 public class CodingQuestion {
 
     @Id
@@ -26,8 +25,9 @@ public class CodingQuestion {
     @Column(nullable = false)
     private String description;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private String difficulty; // "EASY", "MEDIUM", "HARD"
+    private Difficulty difficulty;
 
     @Lob
     private String inputFormat;
@@ -36,27 +36,52 @@ public class CodingQuestion {
     private String outputFormat;
 
     @Lob
-    private String examples; // You can store JSON string or plain text
+    private String examples;
 
     @Lob
     private String constraints;
 
     @ElementCollection
-    @CollectionTable(name = "coding_question_tags", joinColumns = @JoinColumn(name = "question_id"))
+    @CollectionTable(
+            name = "coding_question_tags",
+            joinColumns = @JoinColumn(name = "question_id")
+    )
     @Column(name = "tag")
     private Set<String> tags;
 
     @Lob
-    private String solution; // optional reference solution
+    private String solution;
 
     private Integer maxScore;
 
-    private Boolean isActive = true;
+    @Column(name = "is_active")
+    private Boolean active = true;
 
-    private LocalDateTime createdAt = LocalDateTime.now();
+    private Integer timeLimit;
 
-    private LocalDateTime updatedAt = LocalDateTime.now();
+    private Integer memoryLimit;
 
-    @OneToMany(mappedBy = "codingQuestion", cascade = CascadeType.ALL, orphanRemoval = true)
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
+
+    @OneToMany(
+            mappedBy = "codingQuestion",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true,
+            fetch = FetchType.LAZY
+    )
     private List<TestCase> testCases;
+
+    private UUID createdBy;
+
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
+        updatedAt = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = LocalDateTime.now();
+    }
 }

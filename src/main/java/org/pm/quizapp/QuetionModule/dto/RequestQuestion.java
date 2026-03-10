@@ -9,14 +9,20 @@ import org.pm.quizapp.QuetionModule.entity.Difficulty;
 @Data
 public class RequestQuestion {
     @NotBlank
-    @NotNull
     private String question;
+    @NotBlank
     private String optionA;
+    @NotBlank
     private String optionB;
+    @NotBlank
     private String optionC;
+    @NotBlank
     private String optionD;
+    @NotBlank
     private String correctAnswer;
+    @NotNull
     private Category category;
     private boolean isPublic;
+    @NotNull
     private Difficulty difficulty;
 }
